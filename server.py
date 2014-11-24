@@ -6,6 +6,7 @@ Clase (y programa principal) para un servidor de eco en UDP simple
 
 import SocketServer
 import sys
+import os
 
 
 class SIPHandler(SocketServer.DatagramRequestHandler):
@@ -28,14 +29,19 @@ class SIPHandler(SocketServer.DatagramRequestHandler):
         elif code == "405":
             metodo = "Method not allowed"
 
-        msg = "SIP/2.0 " + code + metodo + "\r\n"
+        msg = "SIP/2.0 " + code + " " + metodo + "\r\n\r\n"
         return msg
 
     def send(self, code):
         """ Envía al servidor un mensaje usando el código como parámetro """
-        msg = mensaje(code)
+        if code == "100":
+            msg = self.mensaje("100")
+            msg += self.mensaje("180")
+            msg += self.mensaje("200")
+        else:
+            msg = self.mensaje(code)
         print "Enviando: " + msg
-        self.wfile.write(msg + '\r\n')
+        self.wfile.write(msg)
         
 
     def handle(self):
@@ -45,13 +51,11 @@ class SIPHandler(SocketServer.DatagramRequestHandler):
         metodo = line.split()[0]
         prot = line.split()[2]
         if metodo == "INVITE":
-            self.send("100")    # Envío Trying
-            self.send("180")    # Envío Ringing
-            self.send("200")    # Envío OK
-            answer = self.rfile.read() # Recibo ACK
-            answer = line.split()[0]
-            if answer != "ACK":
-                print "Conversación rechazada por el cliente"
+            self.send("100")    # Send interpreta el Trying y añade Ringing y OK
+        elif metodo == "ACK":
+            comando = "./mp32rtp -i 127.0.0.1 -p 23032 < " + FILE
+            print "Enviando archivo..."
+            os.system(comando)
         elif metodo == "BYE":
             self.send("200")
         elif prot != "SIP/2.0":
