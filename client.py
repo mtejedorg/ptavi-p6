@@ -67,10 +67,10 @@ except ValueError:  # Cuando el puerto no es un número
     print USAGE
     sys.exit()
 
-send (METODO)  # Enviamos el metodo con el que nos llaman
+send(METODO)  # Enviamos el metodo con el que nos llaman
 
 try:
-    data = rcv()    
+    data = rcv()
 except socket.error:  # Cuando el servidor no existe
     print "Error: No server listening at",
     print SERVER + " port " + PORT
@@ -81,8 +81,8 @@ code = data.split()[1]
 if code == "100":
 # Trying, buscamos recibir Ring y Ok, en esta práctica en el mismo mensaje
     data = data.split("\r\n\r\n")
-    if data[1].split()[1] == "180":     # Trying
-        if data[2].split()[1] == "200": # OK
+    if data[1].split()[1] == "180":      # Trying
+        if data[2].split()[1] == "200":  # OK
             send("ACK")
         else:
             print "Error: OK no recibido"
