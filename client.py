@@ -13,14 +13,14 @@ USAGE = "Usage: python client.py method receiver@IP:SIPport"
 
 coms = sys.argv
 
-# Cerramos el programa si no nos llaman con el número deseado de argumentos, informando del uso
+# Comprobamos el número de argumentos
 
 if len(coms) != 3:
     print USAGE
     sys.exit()
 
 # Inicializamos el programa e interpretamos los comandos
-METODO = coms[1].upper()  #Nos pueden pasar el parámetro en minúsculas
+METODO = coms[1].upper()  # Nos pueden pasar el parámetro en minúsculas
 servidor = coms[2]
 datos = servidor.split("@")
 NOMBRE = datos[0]
@@ -28,10 +28,12 @@ direccion = datos[1].split(":")
 SERVER = direccion[0]
 PORT = direccion[1]
 
+
 def mensaje(metodo):
     """ Devuelve un string con la forma del mensaje a enviar """
     msg = metodo + " sip:" + NOMBRE + "@" + SERVER + " SIP/2.0\r\n"
     return msg
+
 
 def send(metodo):
     """ Envía al servidor un mensaje usando el método como parámetro """
@@ -42,6 +44,7 @@ def send(metodo):
         print "------    Métodos contemplados: INVITE, BYE, ACK"
     print "Enviando: " + msg
     my_socket.send(msg + '\r\n')
+
 
 def rcv():
     """ Recibe la respuesta y devuelve el código del protocolo """
@@ -55,20 +58,20 @@ my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 try:
     my_socket.connect((SERVER, int(PORT)))
-except socket.gaierror: #Cuando la IP es inválida
+except socket.gaierror:  # Cuando la IP es inválida
     print "Error: invalid IP"
     print USAGE
-    sys.exit() 
-except ValueError:  #Cuando el puerto no es un número
+    sys.exit()
+except ValueError:  # Cuando el puerto no es un número
     print "Error: invalid port"
     print USAGE
     sys.exit()
 
-send (METODO) # Enviamos el metodo con el que nos llaman
+send (METODO)  # Enviamos el metodo con el que nos llaman
 
 try:
     data = rcv()    
-except socket.error:    #Cuando el servidor no existe
+except socket.error:  # Cuando el servidor no existe
     print "Error: No server listening at",
     print SERVER + " port " + PORT
     sys.exit()
@@ -78,8 +81,8 @@ code = data.split()[1]
 if code == "100":
 # Trying, buscamos recibir Ring y Ok, en esta práctica en el mismo mensaje
     data = data.split("\r\n\r\n")
-    if data[1].split()[1] == "180":     #Trying
-        if data[2].split()[1] == "200": #OK
+    if data[1].split()[1] == "180":     # Trying
+        if data[2].split()[1] == "200": # OK
             send("ACK")
         else:
             print "Error: OK no recibido"
