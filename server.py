@@ -14,7 +14,7 @@ class SIPHandler(SocketServer.DatagramRequestHandler):
     SIP server class
     """
     def mensaje(self, code):
-        """ 
+        """
         Devuelve un string con la forma del mensaje a enviar
         Halla el método a partir del código
         """
@@ -42,7 +42,6 @@ class SIPHandler(SocketServer.DatagramRequestHandler):
             msg = self.mensaje(code)
         print "Enviando: " + msg
         self.wfile.write(msg)
-        
 
     def handle(self):
         """ Recibe los mensajes y se encarga de responder """
@@ -51,7 +50,7 @@ class SIPHandler(SocketServer.DatagramRequestHandler):
         metodo = line.split()[0]
         prot = line.split()[2]
         if metodo == "INVITE":
-            self.send("100")    # Send interpreta el Trying y añade Ringing y OK
+            self.send("100")  # Send interpreta el Trying y añade Ringing y OK
         elif metodo == "ACK":
             comando = "./mp32rtp -i 127.0.0.1 -p 23032 < " + FILE
             print "Enviando archivo..."
