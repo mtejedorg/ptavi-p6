@@ -8,7 +8,6 @@ import socket
 import sys
 
 USAGE = "Usage: python client.py method receiver@IP:SIPport"
-SERV_ERROR = "Error: No server listening"
 
 # Cliente UDP simple.
 
@@ -28,12 +27,28 @@ NOMBRE = datos[0]
 direccion = datos[1].split(":")
 SERVER = direccion[0]
 PORT = direccion[1]
-if METODO == "BYE" or "INVITE":
-    LINE = METODO + " sip:" + NOMBRE + ":" + SERVER + " SIP/2.0\r\n"
-else:
-    print "Error, método no contemplado"
-    print "Métodos contemplados: INVITE, BYE"
-    sys.exit()
+
+def mensaje(metodo):
+    """ Devuelve un string con la forma del mensaje a enviar """
+    msg = metodo + " sip:" + NOMBRE + "@" + SERVER + " SIP/2.0\r\n"
+    return msg
+
+def send(metodo):
+    """ Envía al servidor un mensaje usando el método como parámetro """
+    msg = mensaje(metodo)
+    if metodo != "BYE" and metodo != "INVITE":
+        #Detectamos el error, aunque enviamos igualmente
+        print "------WARNING: Método no contemplado"
+        print "------    Métodos contemplados: INVITE, BYE"
+    print "Enviando: " + msg
+    my_socket.send(msg + '\r\n')
+
+def rcv ():
+    """ Recibe la respuesta y devuelve el código del protocolo """
+    data = my_socket.recv(1024)
+    print 'Recibido -- ', data
+    code = data.split()[1]
+    return code
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -50,17 +65,32 @@ except ValueError:  #Cuando el puerto no es un número
     print USAGE
     sys.exit()
 
-print "Enviando: " + line
-my_socket.send(line + '\r\n')
+send (METODO) # Enviamos el metodo con el que nos llaman
 
 try:
-    data = my_socket.recv(1024)
+    code = rcv()
 except socket.error:    #Cuando el servidor no existe
     print "Error: No server listening at",
     print SERVER + " port " + PORT
     sys.exit()
 
-print 'Recibido -- ', data
+if code == "100":            # Trying, buscamos recibir Ring y Ok
+    code = rvc()
+    if code == "180":        # Ring, esperamos un Ok
+        code = rcv()
+        if code == "200":    # OK, enviamos ACK
+            send(ack)
+elif code == "400":          # Bad Request
+    print "El servidor no entiende el método " + METODO
+elif code == "405":          # Method Not Allowed
+    print "Error en el servidor: Método no contemplado"
+elif code == "200":          # Sucederá cuando enviemos un BYE
+    if METODO == "BYE":
+        print "Conexión finalizada con éxito"
+else:
+    print "MEGABRUTALFATAL ERROR: Respuesta no contemplada"
+
+
 print "Terminando socket..."
 
 # Cerramos todo
