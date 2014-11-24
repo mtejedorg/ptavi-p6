@@ -53,7 +53,7 @@ class SIPHandler(SocketServer.DatagramRequestHandler):
             self.send("100")  # Send interpreta el Trying y añade Ringing y OK
         elif metodo == "ACK":
             comando = "./mp32rtp -i 127.0.0.1 -p 23032 < " + FILE
-            print "Enviando archivo..."
+            print "Enviando archivo...\r\n\r\n"
             os.system(comando)
         elif metodo == "BYE":
             self.send("200")
