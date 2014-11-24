@@ -36,19 +36,18 @@ def mensaje(metodo):
 def send(metodo):
     """ Envía al servidor un mensaje usando el método como parámetro """
     msg = mensaje(metodo)
-    if metodo != "BYE" and metodo != "INVITE":
+    if metodo != "BYE" and metodo != "INVITE" and metodo != "ACK":
         #Detectamos el error, aunque enviamos igualmente
         print "------WARNING: Método no contemplado"
-        print "------    Métodos contemplados: INVITE, BYE"
+        print "------    Métodos contemplados: INVITE, BYE, ACK"
     print "Enviando: " + msg
     my_socket.send(msg + '\r\n')
 
-def rcv ():
+def rcv():
     """ Recibe la respuesta y devuelve el código del protocolo """
     data = my_socket.recv(1024)
     print 'Recibido -- ', data
-    code = data.split()[1]
-    return code
+    return data
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -68,18 +67,25 @@ except ValueError:  #Cuando el puerto no es un número
 send (METODO) # Enviamos el metodo con el que nos llaman
 
 try:
-    code = rcv()
+    data = rcv()    
 except socket.error:    #Cuando el servidor no existe
     print "Error: No server listening at",
     print SERVER + " port " + PORT
     sys.exit()
 
-if code == "100":            # Trying, buscamos recibir Ring y Ok
-    code = rvc()
-    if code == "180":        # Ring, esperamos un Ok
-        code = rcv()
-        if code == "200":    # OK, enviamos ACK
-            send(ack)
+code = data.split()[1]
+
+if code == "100":
+# Trying, buscamos recibir Ring y Ok, en esta práctica en el mismo mensaje
+    data = data.split("\r\n\r\n")
+    if data[1].split()[1] == "180":     #Trying
+        if data[2].split()[1] == "200": #OK
+            send("ACK")
+        else:
+            print "Error: OK no recibido"
+    else:
+        print "Error: Trying no recibido"
+
 elif code == "400":          # Bad Request
     print "El servidor no entiende el método " + METODO
 elif code == "405":          # Method Not Allowed
